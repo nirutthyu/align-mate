@@ -1,0 +1,191 @@
+@font-face {
+    font-family: "Westpac-bold";
+    src: url("https://www.westpac.com.au/etc/designs/wbc/clientlib-all/assets/brand/font/WestpacLH-v2.003-Bold.otf") format("OpenType");
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  * {
+    box-sizing: border-box;
+    background-color: rgb(227, 241, 253);
+  }
+  
+  iframe {
+    display: none;
+  }
+  
+  html {
+    font-family: var(--font-body);
+    font-weight: 200;
+    font-size: 10px;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+  
+  @media only screen and (min-width: 1100px) and (min-height: 800px) {
+    html {
+      font-size: 14px;
+    }
+  }
+  
+  body {
+    background-position: 5vw bottom;
+    background-size: 160vw;
+    color: rgba(255, 255, 255, 1);
+    margin: 0;
+    line-height: 1.4;
+  }
+  
+  @media only screen and (min-width: 1020px) {
+    body {
+      background-position: 35vw bottom;
+      background-size: 80vw;
+    }
+  }
+  
+  main {
+    height: 100vh;
+    width: 100vw;
+    max-width: 700px;
+    margin: 0 auto;
+    overflow: hidden;
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  article {
+    width: 100%;
+    padding: 0 2.5rem;
+    position: absolute;
+  }
+  
+  .button-container {
+    display: block;
+    width: 100%;
+    margin-top: 4rem;
+  }
+  
+  .button-container .msg {
+    font-size: 1.3rem;
+    color: var(--color-white-trans3);
+    padding-left: 1.5rem;
+  }
+  
+  button {
+    padding: 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    min-width: 14rem;
+    background: white;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 500ms ease-in-out;
+    box-shadow: 0 0 1rem 0 var(--color-black-trans1);
+  }
+  
+  button:disabled {
+    box-shadow: none !important;
+    cursor: not-allowed;
+  }
+  
+  button:hover {
+    box-shadow: 0 0 1rem 0 white;
+  }
+  
+  ol {
+    font-size: 1.8rem;
+    margin: 0;
+    padding-left: 2.5rem;
+  }
+  
+  li {
+    margin-bottom: 1.5rem;
+    padding-left: 1rem;
+  }
+  
+.choiceBtn{
+ text-decoration:'none';
+ background:'transparent';
+}
+  
+.choiceBtn:hover {
+    background-color:antiquewhite;
+    border-color: var(--color-black-trans2);
+  }
+  
+  .active {
+    color: var(--color-dark1);
+  }
+  
+  .active a {
+    color: var(--color-dark1);
+    border-color: var(--color-dark1);
+  }
+  
+  h1, .h1 {
+    font-family: var(--font-heading);
+    font-weight: 200;
+    font-size: 3rem;
+  }
+  
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4rem;
+    width: 100%;
+    padding: 0 2.5rem;
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--color-black-trans1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  nav .right {
+    display: flex;
+  }
+  
+  nav .logo {
+    height: 2rem;
+    width: 6rem;
+    text-indent: -9999px;
+  }
+  
+  nav .slide {
+    margin-right: 2rem;
+    color: var(--color-white-trans3);
+  }
+  
+  nav .slide span {
+    color: var(--color-black-trans2);
+    padding: 0 0.3rem;
+  }
+  
+  nav button {
+    padding: 0.2rem;
+    min-width: 6rem;
+    margin-left: 0.5rem;
+  }
+  
+  .dialog {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #141929;
+    border-radius: 0.5rem;
+    border: 3px solid var(--light-bg);
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
