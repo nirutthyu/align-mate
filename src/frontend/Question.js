@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
-import './question.css'
+import './question.css';
+import { useState } from 'react';
+
 const spring = {
   type: 'spring',
   stiffness: 700,
@@ -38,8 +40,40 @@ export function Options({ qid, answers, chosenAnswer, chooseAnswer }) {
 }
 
 export default function Question({ item, chooseAnswer, nextSlide }) {
-  const isEnableNext = item.chosenAnswer || item.type === 'welcome';
+  const [isLoading, setIsLoading] = useState(false);
   
+  // Enable Finish button always, others follow normal rules
+  const isEnableNext = item.button.toLowerCase() === 'finish' || 
+                     item.chosenAnswer || 
+                     item.type === 'welcome';
+
+const handleButtonClick = async () => {
+  if (item.button.toLowerCase() === 'finish') {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/assign-rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to assign room');
+      
+      const data = await response.json();
+      console.log('Room assignment:', data);
+      
+      nextSlide();
+    } catch (error) {
+      console.error('Error assigning room:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  } else {
+    nextSlide();
+  }
+};
+
   return (
     <motion.article
       variants={questionVariants}
@@ -61,11 +95,20 @@ export default function Question({ item, chooseAnswer, nextSlide }) {
           />
         </ol>
       )}
+      
       <motion.div className="button-container">
-        <button onClick={nextSlide} disabled={!isEnableNext}>
-          {item.button} &rarr;
+        <button 
+          onClick={handleButtonClick} 
+          disabled={(!isEnableNext && item.button.toLowerCase() !== 'finish') || isLoading}
+        >
+          {isLoading ? 'Processing...' : item.button}
+          {item.button.toLowerCase() !== 'finish' && ' →'}
         </button>
-        {!isEnableNext && <span className="msg">Please choose one to continue</span>}
+        
+        {/* Only show message for non-Finish option questions */}
+        {item.type === 'options' && !item.chosenAnswer && item.button.toLowerCase() !== 'finish' && (
+          <span className="msg">Please choose one to continue</span>
+        )}
       </motion.div>
     </motion.article>
   );
