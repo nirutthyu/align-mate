@@ -10,11 +10,17 @@ app.use(express.json());
 const client = new MongoClient(process.env.MONGODB_URI);
 let db;
 
+/* =====================================================
+   QUESTION CONFIGURATION (UPDATED)
+===================================================== */
 
 const QUESTIONS = {
   0: { type: "binary", labels: ["Night", "Early"] },
   1: { type: "ordinal", labels: ["Low", "Medium", "High"] },
-  2: { type: "binary", labels: ["No", "Yes"] },
+
+  // ✅ UPDATED HERE
+  2: { type: "ordinal", labels: ["No", "Sometimes", "Yes"] },
+
   3: { type: "binary", labels: ["No", "Yes"] },
   4: { type: "binary", labels: ["Group", "Individual"] },
   5: { type: "binary", labels: ["No", "Yes"] },
@@ -35,7 +41,7 @@ const ordinalIdx = Object.keys(QUESTIONS)
 const QID_INDEX = {
   "day-night-person": 0,
   "cleanliness": 1,
-  "fixed-routine": 2,
+  "fixed-routine": 2,   // matches your daily-routine question
   "quiet-room": 3,
   "study-type": 4,
   "gaming": 5,
@@ -45,6 +51,21 @@ const QID_INDEX = {
   "sharing-items": 9
 };
 
+/* =====================================================
+   TRAIT WEIGHTS
+===================================================== */
+
+const TRAIT_WEIGHTS = {
+  stress: 1.5,
+  cleanliness: 1.3,
+  quiet_room: 1.2,
+  sharing_items: 1.1,
+  default: 1.0
+};
+
+/* =====================================================
+   ANSWER EXTRACTION
+===================================================== */
 
 function extractAnswers(user) {
   const arr = new Array(10).fill(null);
@@ -55,7 +76,6 @@ function extractAnswers(user) {
     }
   }
 
-  // fill missing safely
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] === null) arr[i] = QUESTIONS[i].labels[0];
   }
@@ -63,31 +83,21 @@ function extractAnswers(user) {
   return arr;
 }
 
+/* =====================================================
+   PREPROCESSING
+===================================================== */
+
 function preprocessStudent(raw) {
   const encoded = [];
 
   for (let i = 0; i < raw.length; i++) {
-
-    if (!QUESTIONS[i]) {
-      encoded.push(0);
-      continue;
-    }
-
     const labels = QUESTIONS[i].labels;
-    const val = raw[i];
-
-    let idx = labels.indexOf(val);
-
-    // safety
-    if (idx === -1) {
-      console.error("LABEL MISMATCH:", val, "EXPECTED:", labels);
-      idx = 0;
-    }
-
+    let idx = labels.indexOf(raw[i]);
+    if (idx === -1) idx = 0;
     encoded.push(idx);
   }
 
-  // normalize ordinal
+  // Normalize ordinal values to 0–1
   for (const i of ordinalIdx) {
     const max = QUESTIONS[i].labels.length - 1;
     encoded[i] = encoded[i] / max;
@@ -96,6 +106,9 @@ function preprocessStudent(raw) {
   return encoded;
 }
 
+/* =====================================================
+   SIMILARITY
+===================================================== */
 
 function diceSimilarity(a, b) {
   let inter = 0, total = 0;
@@ -106,11 +119,49 @@ function diceSimilarity(a, b) {
   return total === 0 ? 1 : (2 * inter) / total;
 }
 
-function manhattanSim(a, b) {
-  return 1 - Math.abs(a - b);
+/* =====================================================
+   WEIGHTED COMPLEMENT
+===================================================== */
+
+function weightedComplement(A, B) {
+  let total = 0;
+  let weightSum = 0;
+
+  for (let i = 0; i < A.length; i++) {
+    let weight = TRAIT_WEIGHTS.default;
+
+    if (i === 6) weight = TRAIT_WEIGHTS.stress;
+    if (i === 1) weight = TRAIT_WEIGHTS.cleanliness;
+    if (i === 3) weight = TRAIT_WEIGHTS.quiet_room;
+    if (i === 9) weight = TRAIT_WEIGHTS.sharing_items;
+
+    total += weight * Math.abs(A[i] - B[i]);
+    weightSum += weight;
+  }
+
+  return total / weightSum;
 }
 
-function hybridSimilarity(A_raw, B_raw, w_bin = 0.5, w_ord = 0.5) {
+/* =====================================================
+   CONFLICT RISK
+===================================================== */
+
+function conflictRisk(A, B) {
+  let risk = 0;
+
+  if (A[6] > 0.7 && B[6] > 0.7) risk += 0.3;
+  if (A[1] < 0.3 && B[1] < 0.3) risk += 0.2;
+  if (A[7] > 0.7 && B[7] > 0.7) risk += 0.2;
+
+  return risk;
+}
+
+/* =====================================================
+   FINAL COMPATIBILITY
+===================================================== */
+
+function improvedHybridCompatibility(A_raw, B_raw) {
+
   const A = preprocessStudent(A_raw);
   const B = preprocessStudent(B_raw);
 
@@ -122,12 +173,25 @@ function hybridSimilarity(A_raw, B_raw, w_bin = 0.5, w_ord = 0.5) {
   const B_ord = ordinalIdx.map(i => B[i]);
 
   const ordSim = A_ord
-    .map((v, i) => manhattanSim(v, B_ord[i]))
+    .map((v, i) => 1 - Math.abs(v - B_ord[i]))
     .reduce((a, b) => a + b, 0) / A_ord.length;
 
-  return (w_bin * dice) + (w_ord * ordSim);
+  const similarityScore = (dice + ordSim) / 2;
+  const complementScore = weightedComplement(A, B);
+  const riskPenalty = conflictRisk(A, B);
+
+  const alpha = 0.4;
+  const beta = 0.4;
+  const gamma = 0.2;
+
+  return (alpha * similarityScore) +
+         (beta * complementScore) -
+         (gamma * riskPenalty);
 }
 
+/* =====================================================
+   COMPATIBILITY MATRIX
+===================================================== */
 
 function buildCompatibilityMatrix(users) {
   const mat = {};
@@ -139,14 +203,18 @@ function buildCompatibilityMatrix(users) {
       const A = extractAnswers(users[i]);
       const B = extractAnswers(users[j]);
 
-      const sim = hybridSimilarity(A, B);
+      const score = improvedHybridCompatibility(A, B);
 
-      mat[users[i]._id.toString()][users[j]._id.toString()] = sim;
-      mat[users[j]._id.toString()][users[i]._id.toString()] = sim;
+      mat[users[i]._id.toString()][users[j]._id.toString()] = score;
+      mat[users[j]._id.toString()][users[i]._id.toString()] = score;
     }
   }
   return mat;
 }
+
+/* =====================================================
+   SERVER START
+===================================================== */
 
 async function start() {
   try {
@@ -154,7 +222,6 @@ async function start() {
     db = client.db('roommateapp');
     console.log('✅ Connected to MongoDB');
 
-    /* ---------- SAVE USER ---------- */
     app.post('/api/save-user', async (req, res) => {
       try {
         const { email, answers } = req.body;
@@ -167,12 +234,10 @@ async function start() {
 
         res.json({ success: true });
       } catch (err) {
-        console.error("SAVE ERROR:", err);
         res.status(500).json({ success: false, error: err.message });
       }
     });
 
-    /* ---------- ASSIGN ROOMS ---------- */
     app.post('/api/assign-rooms', async (req, res) => {
       try {
         const users = await db.collection('users').find({
@@ -180,14 +245,10 @@ async function start() {
           answers: { $exists: true, $ne: [] }
         }).toArray();
 
-        if (users.length < 2) {
+        if (users.length < 2)
           return res.status(400).json({ error: "Not enough users" });
-        }
-
-        console.log("Assigning rooms for users:", users.length);
 
         const compat = buildCompatibilityMatrix(users);
-
         const used = new Set();
         const rooms = [];
 
@@ -200,7 +261,7 @@ async function start() {
 
           while (room.length < 4) {
             let best = null;
-            let bestScore = -1;
+            let bestScore = -Infinity;
 
             for (let j = 0; j < users.length; j++) {
               const cid = users[j]._id.toString();
@@ -225,7 +286,6 @@ async function start() {
           rooms.push(room);
         }
 
-        // Save to DB
         for (let i = 0; i < rooms.length; i++) {
           const roomId = `room-${i + 1}`;
           await db.collection('users').updateMany(
@@ -237,28 +297,24 @@ async function start() {
         res.json({ success: true, rooms });
 
       } catch (err) {
-        console.error("ROOM ASSIGN ERROR:", err);
         res.status(500).json({ success: false, error: err.message });
       }
     });
 
-    /* ---------- GET ROOM ---------- */
     app.get('/api/my-room/:email', async (req, res) => {
       try {
-        const user = await db.collection('users').findOne({ email: req.params.email });
-        if (!user || !user.roomId) {
+        const user = await db.collection('users')
+          .findOne({ email: req.params.email });
+
+        if (!user || !user.roomId)
           return res.status(404).json({ error: "Room not assigned" });
-        }
 
         const roommates = await db.collection('users').find({
           roomId: user.roomId,
           email: { $ne: user.email }
         }).project({ email: 1 }).toArray();
 
-        res.json({
-          roomId: user.roomId,
-          roommates
-        });
+        res.json({ roomId: user.roomId, roommates });
 
       } catch (err) {
         res.status(500).json({ error: err.message });
@@ -266,7 +322,9 @@ async function start() {
     });
 
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
 
   } catch (err) {
     console.error('❌ DB CONNECTION FAILED:', err);
