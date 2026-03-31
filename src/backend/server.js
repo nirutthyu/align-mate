@@ -331,6 +331,7 @@ async function start() {
     process.exit(1);
   }
 }
+<<<<<<< HEAD
 /* =====================================================
    ADMIN ROOMS API (FINAL)
 ===================================================== */
@@ -392,3 +393,7 @@ app.get('/api/admin/rooms', async (req, res) => {
 });
 
 start();
+=======
+
+start();
+>>>>>>> f1ae626ede442b3ffee6de4cac2552bf39e31b23

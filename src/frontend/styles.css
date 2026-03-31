@@ -188,6 +188,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+<<<<<<< HEAD
   }
 
   /* Full screen background */
@@ -253,3 +254,6 @@
 .back-home:hover {
   transform: scale(1.05);
 }
+=======
+  }
+>>>>>>> f1ae626ede442b3ffee6de4cac2552bf39e31b23
