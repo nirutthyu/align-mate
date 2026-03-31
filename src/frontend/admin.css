@@ -1,0 +1,71 @@
+/* Background */
+.dashboard-container {
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding: 40px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Title */
+.dashboard-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #444;
+  font-size: 26px;
+   background: #f3f4f6;
+}
+
+/* Room cards row */
+.room-cards {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-bottom: 40px;
+  background: #f3f4f6;
+}
+
+/* Each room card */
+.room-card {
+  background: #ffffff;
+  background: #f3f4f6;
+  padding: 20px;
+  width: 200px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.room-card h3 {
+  margin-bottom: 8px;
+  background: #f3f4f6;
+}
+
+.room-card p {
+  font-size: 14px;
+  color: #666;
+  background: #f3f4f6;
+}
+
+.room-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Members section */
+.members-card {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  
+}
+
+/* Member list items */
+.member-item {
+  background: #e5e7eb;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  color: #444;
+  
+}
