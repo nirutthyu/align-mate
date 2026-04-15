@@ -23,7 +23,7 @@ const questionVariants = {
 
 const variant = {
   hidden: { opacity: 0, translateY: 50 },
-  show: { opacity: 1, translateY: 0 },
+  show:   { opacity: 1, translateY: 0 },
 };
 
 export function Options({ qid, answers, chosenAnswer, chooseAnswer }) {
@@ -32,47 +32,40 @@ export function Options({ qid, answers, chosenAnswer, chooseAnswer }) {
       key={i}
       variants={variant}
       onClick={() => chooseAnswer(qid, ans)}
-      className={`${chosenAnswer === ans ? 'active' : ''}`}
+      className={chosenAnswer === ans ? 'active' : ''}
     >
-      <button className="choiceBtn" style={{'textDecoration':'none','background':'transparent'}}>{ans}</button>
+      <button className="choiceBtn">{ans}</button>
     </motion.li>
   ));
 }
 
 export default function Question({ item, chooseAnswer, nextSlide }) {
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Enable Finish button always, others follow normal rules
-  const isEnableNext = item.button.toLowerCase() === 'finish' || 
-                     item.chosenAnswer || 
-                     item.type === 'welcome';
 
-const handleButtonClick = async () => {
-  if (item.button.toLowerCase() === 'finish') {
-    setIsLoading(true);
-    try {
-      const response = await fetch('http://localhost:5000/api/assign-rooms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+  const isFinish     = item.button.toLowerCase() === 'finish';
+  const isEnableNext = isFinish || item.chosenAnswer || item.type === 'welcome';
 
-      if (!response.ok) throw new Error('Failed to assign room');
-      
-      const data = await response.json();
-      console.log('Room assignment:', data);
-      
+  async function handleButtonClick() {
+    if (isFinish) {
+      setIsLoading(true);
+      try {
+        const response = await fetch('http://localhost:5000/api/assign-rooms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) throw new Error('Failed to assign room');
+        const data = await response.json();
+        console.log('Room assignment:', data);
+        nextSlide();
+      } catch (error) {
+        console.error('Error assigning room:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
       nextSlide();
-    } catch (error) {
-      console.error('Error assigning room:', error);
-    } finally {
-      setIsLoading(false);
     }
-  } else {
-    nextSlide();
   }
-};
 
   return (
     <motion.article
@@ -82,9 +75,12 @@ const handleButtonClick = async () => {
       transition={spring}
       exit={{ opacity: 0, translateY: -50 }}
     >
+      {/* Question text */}
       <motion.p className="h1" variants={variant}>
         {item.question}
       </motion.p>
+
+      {/* Answer options */}
       {item.type === 'options' && (
         <ol>
           <Options
@@ -95,19 +91,26 @@ const handleButtonClick = async () => {
           />
         </ol>
       )}
-      
-      <motion.div className="button-container">
-        <button 
-          onClick={handleButtonClick} 
-          disabled={(!isEnableNext && item.button.toLowerCase() !== 'finish') || isLoading}
+
+      {/* Next / Finish button + hint */}
+      <motion.div className="btn-row" variants={variant}>
+        <button
+          className={`next-btn${isLoading ? ' loading' : ''}`}
+          onClick={handleButtonClick}
+          disabled={(!isEnableNext && !isFinish) || isLoading}
         >
-          {isLoading ? 'Processing...' : item.button}
-          {item.button.toLowerCase() !== 'finish' && ' →'}
+          {isLoading ? (
+            'Processing…'
+          ) : (
+            <>
+              {item.button}
+              {!isFinish && <span className="next-btn-arrow">→</span>}
+            </>
+          )}
         </button>
-        
-        {/* Only show message for non-Finish option questions */}
-        {item.type === 'options' && !item.chosenAnswer && item.button.toLowerCase() !== 'finish' && (
-          <span className="msg">Please choose one to continue</span>
+
+        {item.type === 'options' && !item.chosenAnswer && !isFinish && (
+          <span className="msg">Pick one to continue</span>
         )}
       </motion.div>
     </motion.article>

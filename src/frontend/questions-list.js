@@ -21,11 +21,7 @@ export default [
     qid: 'daily-routine',
     question: 'Do you prefer a fixed daily routine?',
     type: 'options',
-<<<<<<< HEAD
     answers: ['No','Sometimes','Yes',],
-=======
-    answers: ['Yes', 'No'],
->>>>>>> f1ae626ede442b3ffee6de4cac2552bf39e31b23
     matchType: 'similarity',
     button: 'Next',
   },
@@ -54,17 +50,6 @@ export default [
     button: 'Next',
   },
   {
-<<<<<<< HEAD
-=======
-    qid: 'stress-handle-sim',
-    question: 'How do you handle stress?',
-    type: 'options',
-    answers: ['Stay calm', 'Need support'],
-    matchType: 'similarity',
-    button: 'Next',
-  },
-  {
->>>>>>> f1ae626ede442b3ffee6de4cac2552bf39e31b23
     qid: 'movies-frequency',
     question: 'How often do you watch movies/TV shows?',
     type: 'options',

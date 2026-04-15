@@ -1,6 +1,5 @@
-<<<<<<< HEAD
 import React, { useState } from "react";
-import Home from "./Home"; // your old App.js renamed
+import Home from "./Home";
 import AdminLogin from "./AdminLogin";
 import AdminDashboard from "./AdminDashboard";
 import "./App.css";
@@ -9,16 +8,14 @@ export default function App() {
   const [page, setPage] = useState("main");
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
-if (page === "dashboard" && isAdminLoggedIn) {
-  return <AdminDashboard />;
-}
+  if (page === "dashboard" && isAdminLoggedIn) {
+    return <AdminDashboard />;
+  }
 
-  // 👉 When student login clicked → go to Home.js (questionnaire)
   if (page === "student") {
     return <Home setPage={setPage} />;
   }
 
-  // 👉 Admin placeholder
   if (page === "admin") {
     return (
       <AdminLogin
@@ -28,182 +25,109 @@ if (page === "dashboard" && isAdminLoggedIn) {
     );
   }
 
-  // 👉 MAIN UI (your sketch design)
   return (
-    <div className="home-container">
+    <div className="app-root">
 
+      {/* Background decoration */}
+      <div className="app-bg-circle one" />
+      <div className="app-bg-circle two" />
 
-    <div className="title-box">
-      <h1 className="title">ALIGNMATE</h1>
-      <p className="subtitle">
-        Find the most compatible roommate for you
-      </p>
-
-    <div className="button-group">
-      <button className="btn" onClick={() => setPage("student")}>
-        Student Login
-      </button>
-
-      <button className="btn admin" onClick={() => setPage("admin")}>
-        Admin Login
-      </button>
-    </div>
+      {/* Top bar */}
+      <header className="app-topbar">
+        <div className="app-logo">
+          <div className="app-logo-mark">🏠</div>
+          <div>
+            <div className="app-logo-name">AlignMate</div>
+            <div className="app-logo-tag">Hostel Roommate System</div>
+          </div>
         </div>
+      </header>
 
-  </div>
-  );
-}
-=======
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Question from './Question';
-import './styles.css';
-import qdata from './questions-list.js';
-import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode'; 
+      {/* Main content */}
+      <main className="app-main">
 
-const animationVariant = {
-  hidden: { opacity: 0, translateY: -100 },
-  show: { opacity: 1, translateY: 0 },
-};
+        {/* ── Left: Hero ── */}
+        <section className="app-hero">
+          <div className="app-eyebrow">
+            <span className="app-eyebrow-line" />
+            <span className="app-eyebrow-text">Smart Room Assignment</span>
+          </div>
 
-export default function App() {
-  const [questionsList, setQuestionsList] = useState(qdata);
-  const [slide, setSlide] = useState(0);
-  const [email, setEmail] = useState(null);
-  const [showSignIn, setShowSignIn] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+          <h1 className="app-headline">
+            Find your
+            <span className="app-headline-accent">perfect</span>
+            roommate.
+          </h1>
 
-  function handleNextSlide(index) {
-    const maxIndex = qdata.length - 1;
-    if (index > maxIndex || index < 0) return;
-    setSlide(index);
-  }
+          <p className="app-desc">
+            Answer a few questions about your lifestyle and preferences.
+            Our algorithm matches you with the most compatible roommate in your hostel.
+          </p>
 
-  function handleChooseAnswer(qid, answer) {
-    const updated = questionsList.map((q) =>
-      q.qid === qid ? { ...q, chosenAnswer: answer } : q
-    );
-    setQuestionsList(updated);
-  
-    const currentIndex = questionsList.findIndex(q => q.qid === qid);
-    const isLastQuestion = currentIndex === questionsList.length - 2; // -2 because final "Thanks" question is not an actual question
-  
-    if (isLastQuestion) {
-      // Save answers to backend
-      fetch('http://localhost:5000/api/save-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          answers: updated.filter(q => q.chosenAnswer !== undefined), // Only answered
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => console.log("Saved to backend:", data))
-        .catch((err) => console.error("Backend error:", err));
-    }
-  }
-  
-  function handleLoginSuccess(credentialResponse) {
-    const decoded = jwtDecode(credentialResponse.credential);
-    setEmail(decoded.email);
-    setIsLoggedIn(true);
-    setSlide(1); // Move to first question after login
-    console.log("Logged in:", decoded.email);
-
-    fetch('http://localhost:5000/api/save-user', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: decoded.email,
-        answers: questionsList,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => console.log("Saved to backend:", data))
-      .catch((err) => console.error("Backend error:", err));
-  
-    setSlide(slide + 1);
-    // TODO: Store answers/email to MongoDB via backend later
-  }
-
-  return (
-    <main>
-      {/* Show welcome screen initially */}
-      {slide === 0 && (
-        <AnimatePresence>
-          <motion.div
-            className="welcome-container"
-            variants={animationVariant}
-            initial="hidden"
-            animate="show"
-          >
-            {!showSignIn && (
-              <>
-                <h2>
-                  We’ll ask some questions to understand your lifestyle and preferences to find the best roommate for you.
-                </h2>
-                <button onClick={() => setShowSignIn(true)} style={{ marginTop: '20px' }}>
-                  Get Started
-                </button>
-              </>
-            )}
-
-            {showSignIn && !isLoggedIn && (
-              <div style={{ marginTop: '20px' }}>
-                <GoogleLogin
-                  onSuccess={handleLoginSuccess}
-                  onError={() => {
-                    console.log('Login Failed');
-                  }}
-                />
+          <div className="app-actions">
+            <button className="app-btn student" onClick={() => setPage("student")}>
+              <div>
+                Student Login
+                <span className="app-btn-sub">Fill your preference form</span>
               </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      )}
+              <span className="app-btn-arrow">→</span>
+            </button>
 
-      {/* Show questions after login */}
-      {isLoggedIn &&
-        questionsList.map((item, i) => (
-          <AnimatePresence key={i}>
-            {i === slide && slide > 0 && (
-              <Question
-                item={item}
-                chooseAnswer={handleChooseAnswer}
-                nextSlide={() => handleNextSlide(slide + 1)}
-              />
-            )}
-          </AnimatePresence>
-        ))}
+            <button className="app-btn admin" onClick={() => setPage("admin")}>
+              <div>
+                Admin Login
+                <span className="app-btn-sub">View & manage assignments</span>
+              </div>
+              <span className="app-btn-arrow">→</span>
+            </button>
+          </div>
+        </section>
 
-      {/* Navigation bar */}
-      <motion.nav>
-        <div className="logo">Roommate Match</div>
-        {isLoggedIn && slide > 0 && (
-          <motion.div
-            className="right"
-            variants={animationVariant}
-            initial="hidden"
-            animate="show"
-            transition={{ delay: 0.5, duration: 1 }}
-          >
-            <div className="slide">
-              {slide}
-              <span>/</span>
-              {qdata.length - 1}
+        {/* ── Right: Visual ── */}
+        <section className="app-visual">
+          <div className="app-visual-grid" />
+
+          {/* Floating card stack */}
+          <div className="app-card-stack">
+
+            {/* Back cards (decorative) */}
+            <div className="app-card back-2" />
+            <div className="app-card back-1" />
+
+            {/* Front card */}
+            <div className="app-card front">
+              <div className="app-card-top">
+                <div className="app-card-avatar">👤</div>
+                <div>
+                  <div className="app-card-name">Arjun S.</div>
+                  <div className="app-card-tag">Room 204 · Block B</div>
+                </div>
+              </div>
+
+              <div className="app-card-divider" />
+
+              <div className="app-card-row">
+                <span className="app-card-label">Sleep Schedule</span>
+                <span className="app-card-value">11 pm – 7 am</span>
+              </div>
+              <div className="app-card-row">
+                <span className="app-card-label">Study Style</span>
+                <span className="app-card-value">Silent</span>
+              </div>
+              <div className="app-card-row">
+                <span className="app-card-label">Cleanliness</span>
+                <span className="app-card-value">Very tidy</span>
+              </div>
+              <div className="app-card-row">
+                <span className="app-card-label">Social Level</span>
+                <span className="app-card-value">Introvert</span>
+              </div>
             </div>
-            <div className="buttons">
-              <button onClick={() => handleNextSlide(slide - 1)}>&larr;</button>
-              <button onClick={() => handleNextSlide(slide + 1)}>&rarr;</button>
-            </div>
-          </motion.div>
-        )}
-      </motion.nav>
-    </main>
+          </div>
+  
+        </section>
+
+      </main>
+    </div>
   );
 }
->>>>>>> f1ae626ede442b3ffee6de4cac2552bf39e31b23
